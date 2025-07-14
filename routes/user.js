@@ -3,7 +3,9 @@ const jwt = require('jsonwebtoken');
 const db = require('../config/db');
 const bcrypt = require('bcrypt');
 const router = express.Router();
-const upload = require('../utils/upload');
+// const upload = require('../utils/upload');
+const { upload, uploadToCloudinary } = require('../utils/upload');
+
 
 // === 取得使用者資料 ===
 router.get('/getUserInfo', async (req, res) => {
@@ -83,30 +85,61 @@ router.post('/updatePassword', async (req, res) => {
 });
 
 // === 更新大頭照 ===
+// router.post('/updateImage', upload.single('picture'), async (req, res) => {
+//     const { id } = req.body;
+//     const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+//     if (!id) {
+//         return res.status(400).json({ error: 'User ID is required' });
+//     }
+//     if (!imagePath) {
+//         return res.status(400).json({ error: 'No image uploaded' });
+//     }
+//     try {
+//         const [result] = await db.query(
+//             'UPDATE user SET picture = ? WHERE id = ?',
+//             [imagePath, id]
+//         );
+//         console.log('圖片更新成功', result);
+//         return res.json({
+//             message: 'User picture updated successfully',
+//             path: imagePath,
+//         });
+//     } catch (err) {
+//         console.error('資料庫錯誤:', err);
+//         return res.status(500).json({ error: 'Database error', details: err });
+//     }
+// });
 router.post('/updateImage', upload.single('picture'), async (req, res) => {
     const { id } = req.body;
-    const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
     if (!id) {
         return res.status(400).json({ error: 'User ID is required' });
     }
-    if (!imagePath) {
+    if (!req.file) {
         return res.status(400).json({ error: 'No image uploaded' });
     }
+
     try {
+        // 上傳至 Cloudinary
+        const cloudResult = await uploadToCloudinary(req.file.buffer, `user_${id}_${Date.now()}`);
+        const imageUrl = cloudResult.secure_url;
+
+        // 更新使用者資料表中的圖片欄位
         const [result] = await db.query(
             'UPDATE user SET picture = ? WHERE id = ?',
-            [imagePath, id]
+            [imageUrl, id]
         );
+
         console.log('圖片更新成功', result);
         return res.json({
             message: 'User picture updated successfully',
-            path: imagePath,
+            path: imageUrl,
         });
     } catch (err) {
-        console.error('資料庫錯誤:', err);
-        return res.status(500).json({ error: 'Database error', details: err });
+        console.error('圖片上傳錯誤:', err);
+        return res.status(500).json({ error: '圖片上傳失敗', details: err });
     }
 });
+
 
 
 //取得使用者所有資訊

@@ -4,7 +4,8 @@ const router = express.Router();
 const db = require('../config/db');
 const redisClient = require('../config/redis');
 const transporter = require('../utils/mailer');
-const upload = require('../utils/upload');
+// const upload = require('../utils/upload');
+const { upload, uploadToCloudinary } = require('../utils/upload');
 const jwt = require('jsonwebtoken'); //user身分驗證
 
 
@@ -50,28 +51,60 @@ router.post('/verifyCode', async (req, res) => {
 });
 
 // === 註冊帳號 ===
+// router.post('/register', upload.single('picture'), async (req, res) => {
+//   const { name, gender, birthday, email, password, disease, freq } = req.body;
+//   const picture = req.file ? req.file.path : null;
+//   if (!name || !gender || !birthday || !email || !password) {
+//     return res.status(400).json({ message: '尚有欄位未填寫' });
+//   }
+//   try {
+//     const [existing] = await db.query('SELECT id FROM user WHERE email = ?', [email]);
+//     if (existing.length > 0) {
+//       return res.status(409).json({ message: '此電子郵件已被註冊' });
+//     }
+//     const hashedPassword = await bcrypt.hash(password, 10);
+//     await db.query(
+//       'INSERT INTO user (name, gender, birthday, picture, email, password, disease, freq) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+//       [name, gender, birthday, picture, email, hashedPassword, disease, freq]
+//     );
+//     res.status(201).json({ message: '註冊成功' });
+//   } catch (error) {
+//     console.error('註冊錯誤：', error);
+//     res.status(500).json({ message: '伺服器錯誤' });
+//   }
+// });
 router.post('/register', upload.single('picture'), async (req, res) => {
   const { name, gender, birthday, email, password, disease, freq } = req.body;
-  const picture = req.file ? req.file.path : null;
+
   if (!name || !gender || !birthday || !email || !password) {
     return res.status(400).json({ message: '尚有欄位未填寫' });
   }
+
   try {
     const [existing] = await db.query('SELECT id FROM user WHERE email = ?', [email]);
     if (existing.length > 0) {
       return res.status(409).json({ message: '此電子郵件已被註冊' });
     }
+
+    let imageUrl = null;
+    if (req.file) {
+      const result = await uploadToCloudinary(req.file.buffer, `user_${Date.now()}`);
+      imageUrl = result.secure_url;
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     await db.query(
       'INSERT INTO user (name, gender, birthday, picture, email, password, disease, freq) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [name, gender, birthday, picture, email, hashedPassword, disease, freq]
+      [name, gender, birthday, imageUrl, email, hashedPassword, disease, freq]
     );
+
     res.status(201).json({ message: '註冊成功' });
   } catch (error) {
     console.error('註冊錯誤：', error);
     res.status(500).json({ message: '伺服器錯誤' });
   }
 });
+
 
 // === 登入帳號 ===
 router.post('/login', async (req, res) => {
