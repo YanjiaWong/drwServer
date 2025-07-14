@@ -28,7 +28,7 @@ const upload = multer({ storage });
 cloudinary.config({
   cloud_name:'dp6nv22vo',
   api_key:'446548531346232',
-  api_secret:process.env.CLOUDINARY_SECRET
+  api_secret:process.env.CLOUDINAEY_SECRET
 });
 
 // 將 buffer 上傳到 Cloudinary
