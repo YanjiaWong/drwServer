@@ -141,7 +141,6 @@ router.post('/updateImage', upload.single('picture'), async (req, res) => {
 });
 
 
-
 //取得使用者所有資訊
 router.get('/getUserDetail', async (req, res) => {
     const authHeader = req.headers.authorization;
@@ -173,6 +172,7 @@ router.get('/getUserDetail', async (req, res) => {
             r.recording,
             r.photo,
             r.group_id,
+            r.name,
             c.fk_user_id,
             c.id_calls AS remindId,
             c.fk_record_id,
@@ -201,6 +201,7 @@ router.get('/getUserDetail', async (req, res) => {
                     choosekind: row.choosekind,
                     recording: row.recording,
                     photo: row.photo,
+                    name: row.name,
                     group_id:row.group_id,
                     reminds: [],
                 };
@@ -226,5 +227,4 @@ router.get('/getUserDetail', async (req, res) => {
         res.status(500).json({ message: '伺服器錯誤' });
     }
 });
-
 module.exports = router;
