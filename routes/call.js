@@ -7,28 +7,15 @@ router.post('/addRemind', async (req, res) => {
     try {
         const { fk_user_id, fk_record_id, day, time, freq } = req.body;
         console.log('收到的參數:', req.body);
-
-        // 建立提醒
-        const insertQuery = `
+        const query = `
       INSERT INTO calls 
       (fk_user_id, fk_record_id, day, time, freq)
       VALUES (?, ?, ?, ?, ?)
     `;
-        const [insertResult] = await db.query(insertQuery, [fk_user_id, fk_record_id, day, time, freq]);
-
-        // 更新 record.ifcall = 'Y'
-        const updateQuery = `
-      UPDATE record 
-      SET ifcall = 'Y' 
-      WHERE id_record = ? AND fk_userid = ?
-    `;
-        const [updateResult] = await db.query(updateQuery, [fk_record_id, fk_user_id]);
-
+        const [result] = await db.query(query, [fk_user_id, fk_record_id, day, time, freq]);
         res.json({
-            success: true,
-            message: '提醒新增成功',
-            insertId: insertResult.insertId,
-            updatedRows: updateResult.affectedRows
+            message: 'User added successfully',
+            insertId: result.insertId
         });
     } catch (err) {
         console.error('資料庫錯誤:', err);
