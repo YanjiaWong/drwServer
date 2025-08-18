@@ -187,28 +187,31 @@ router.get('/getGroupId', async (req, res) => {
 
 //更新癒合時間
 router.post('/updateOktime', async (req, res) => {
-  const { userId, recordId, groupId, oktime } = req.body;
-  if (!userId || !oktime) {
+  const { userId, recordId, groupId, oktime , ifcall} = req.body;
+
+  // 檢查必要參數
+  if (userId == null || oktime == null) {
     return res.status(400).json({ success: false, message: '缺少必要參數 (userId 或 oktime)' });
   }
+
   try {
     let result;
     if (groupId) {
-      // 若有傳 groupId：用 userId + groupId 為條件
+      // 用 userId + groupId 更新
       [result] = await db.query(
-        'UPDATE record SET oktime = ? , ifcall = "N" WHERE fk_userid = ? AND group_id = ?',
-        [oktime, userId, groupId]
+        'UPDATE record SET oktime = ?, ifcall = ? WHERE fk_userid = ? AND group_id = ?',
+        [oktime, ifcall, userId, groupId]
       );
     } else {
-      // 未傳 groupId：必須傳 recordId
       if (!recordId) {
         return res.status(400).json({ success: false, message: '未傳入 groupId 時，recordId 為必要參數' });
       }
       [result] = await db.query(
-        'UPDATE record SET oktime = ? , ifcall = "N" WHERE fk_userid = ? AND id_record = ?',
-        [oktime, userId, recordId]
+        'UPDATE record SET oktime = ?, ifcall = ? WHERE fk_userid = ? AND id_record = ?',
+        [oktime, ifcall, userId, recordId]
       );
     }
+
     if (result.affectedRows > 0) {
       res.status(200).json({ success: true });
     } else {
