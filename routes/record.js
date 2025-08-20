@@ -235,7 +235,7 @@ router.post('/updateIfcall', async (req, res) => {
     if (groupId) {
       // 用 userId + groupId 更新
       [result] = await db.query(
-        'UPDATE record SET ifcall = ? WHERE fk_user_id = ? AND group_id = ?',
+        'UPDATE record SET ifcall = ? WHERE fk_userid = ? AND group_id = ?',
         [ifcall, userId, groupId]
       );
     } else {
@@ -243,7 +243,7 @@ router.post('/updateIfcall', async (req, res) => {
         return res.status(400).json({ success: false, message: '未傳入 groupId 時，recordId 為必要參數' });
       }
       [result] = await db.query(
-        'UPDATE record SET ifcall = ? WHERE fk_user_id = ? AND id_record = ?',
+        'UPDATE record SET ifcall = ? WHERE fk_userid = ? AND id_record = ?',
         [ifcall, userId, recordId]
       );
     }
