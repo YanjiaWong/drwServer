@@ -30,7 +30,17 @@ router.get('/getReminds', async (req, res) => {
     if (!id) return res.status(400).json({ error: 'id is required' });
     const userId = Number(id);
     if (isNaN(userId)) return res.status(400).json({ error: 'Invalid id format' });
-    const query = `SELECT * FROM calls WHERE fk_user_id = ?`;
+      const query = `
+        SELECT 
+        id_calls AS id,
+        fk_user_id AS userId,
+        fk_record_id AS recordId,
+        day,
+        time,
+        freq
+        FROM calls
+        WHERE fk_user_id = ?
+    `;
     try {
         const [results] = await db.query(query, [userId]);
         if (results.length === 0) {
@@ -42,6 +52,23 @@ router.get('/getReminds', async (req, res) => {
         res.status(500).json({ error: 'Database error' });
     }
 });
+// router.get('/getReminds', async (req, res) => {
+//     const id = req.query.id;
+//     if (!id) return res.status(400).json({ error: 'id is required' });
+//     const userId = Number(id);
+//     if (isNaN(userId)) return res.status(400).json({ error: 'Invalid id format' });
+//     const query = `SELECT * FROM calls WHERE fk_user_id = ?`;
+//     try {
+//         const [results] = await db.query(query, [userId]);
+//         if (results.length === 0) {
+//             return res.status(404).json({ error: 'Reminds not found' });
+//         }
+//         res.json(results);
+//     } catch (err) {
+//         console.error('Database error:', err);
+//         res.status(500).json({ error: 'Database error' });
+//     }
+// });
 
 
 // === 修改提醒時間 ===
