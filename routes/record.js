@@ -133,7 +133,7 @@ router.get('/getRecordRemind', async (req, res) => {
                 r.choosekind,
                 r.recording,
                 r.photo,
-                r.name
+                r.name,
                 r.group_id,
                 c.fk_user_id,
                 c.id_calls AS remindId,
