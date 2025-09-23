@@ -271,5 +271,30 @@ router.post('/updateOktime', async (req, res) => {
   }
 });
 
+//修改是否開啟護理提醒
+router.post('/updateIfcall', async (req, res) => {
+  const { userId, recordId, ifcall } = req.body;
+  if (!userId || !ifcall) {
+    return res.status(400).json({ success: false, message: '缺少必要參數 (userId 或 oktime)' });
+  }
+  try {
+    let result;
+    if (!recordId) {
+      return res.status(400).json({ success: false, message: 'recordId 為必要參數' });
+    }
+    [result] = await db.query(
+      'UPDATE record SET ifcall = ? WHERE fk_userid = ? AND id_record = ?',
+      [ifcall, userId, recordId]
+    );
+    if (result.affectedRows > 0) {
+      res.status(200).json({ success: true });
+    } else {
+      res.status(404).json({ success: false, message: '找不到符合條件的紀錄' });
+    }
+  } catch (error) {
+    console.error('更新 ifcall 失敗：', error);
+    res.status(500).json({ success: false, message: '伺服器錯誤' });
+  }
+});
 
 module.exports = router;
