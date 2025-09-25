@@ -104,11 +104,12 @@ router.post('/verifyCode', async (req, res) => {
 //   }
 // });
 router.post('/register', async (req, res) => {
-  const { name, birthday, email, password, disease = '[無]', freq = '無、無、無' } = req.body;
+  const { name, birthday, email, password, disease = '[無]', freq = '無、無、無' } = req.body || {};
 
   if (!name || !birthday || !email || !password) {
     return res.status(400).json({ message: '尚有欄位未填寫' });
   }
+
 
   try {
     const [existing] = await db.query('SELECT id FROM user WHERE email = ?', [email]);
