@@ -7,6 +7,11 @@ const router = express.Router();
 const { upload, uploadToCloudinary } = require('../utils/upload');
 
 
+// === 叫醒伺服器用 ===
+router.get('/ping', async (req, res) => {
+  res.status(200).send('pong');
+});
+
 // === 取得使用者資料 ===
 router.get('/getUserInfo', async (req, res) => {
     const authHeader = req.headers.authorization;
