@@ -77,9 +77,9 @@ router.post('/verifyCode', async (req, res) => {
 
 // === 註冊帳號 ===
 router.post('/register', upload.single('picture'), async (req, res) => {
-  const { name, gender, birthday, email, password, disease, freq } = req.body;
 
-  if (!name || !gender || !birthday || !email || !password) {
+  const { name, birthday, email, password, disease, freq } = req.body;
+  if (!name || !birthday || !email || !password) {
     return res.status(400).json({ message: '尚有欄位未填寫' });
   }
 
@@ -96,9 +96,10 @@ router.post('/register', upload.single('picture'), async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+
     await db.query(
-      'INSERT INTO user (name, gender, birthday, picture, email, password, disease, freq) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [name, gender, birthday, imageUrl, email, hashedPassword, disease, freq]
+      'INSERT INTO user (name, birthday, picture, email, password, disease, freq) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [name, birthday, imageUrl, email, hashedPassword, disease, freq]
     );
 
     res.status(201).json({ message: '註冊成功' });
