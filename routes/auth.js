@@ -75,10 +75,37 @@ router.post('/verifyCode', async (req, res) => {
   }
 });
 
-// === 註冊帳號 ===
-router.post('/register', upload.single('picture'), async (req, res) => {
+// // === 註冊帳號 ===
+// router.post('/register', async (req, res) => {
 
-  const { name, birthday, email, password, disease, freq } = req.body;
+//   const { name, birthday, email, password, disease, freq } = req.body;
+//   if (!name || !birthday || !email || !password) {
+//     return res.status(400).json({ message: '尚有欄位未填寫' });
+//   }
+
+//   try {
+//     const [existing] = await db.query('SELECT id FROM user WHERE email = ?', [email]);
+//     if (existing.length > 0) {
+//       return res.status(409).json({ message: '此電子郵件已被註冊' });
+//     }
+
+
+//     const hashedPassword = await bcrypt.hash(password, 10);
+
+//     await db.query(
+//       'INSERT INTO user (name, birthday,  email, password, disease, freq) VALUES (?, ?, ?, ?, ?, ?)',
+//       [name, birthday,  email, hashedPassword, disease, freq]
+//     );
+
+//     res.status(201).json({ message: '註冊成功' });
+//   } catch (error) {
+//     console.error('註冊錯誤：', error);
+//     res.status(500).json({ message: '伺服器錯誤' });
+//   }
+// });
+router.post('/register', async (req, res) => {
+  const { name, birthday, email, password, disease = '[無]', freq = '無、無、無' } = req.body;
+
   if (!name || !birthday || !email || !password) {
     return res.status(400).json({ message: '尚有欄位未填寫' });
   }
@@ -89,17 +116,11 @@ router.post('/register', upload.single('picture'), async (req, res) => {
       return res.status(409).json({ message: '此電子郵件已被註冊' });
     }
 
-    let imageUrl = null;
-    if (req.file) {
-      const result = await uploadToCloudinary(req.file.buffer, `user_${Date.now()}`);
-      imageUrl = result.secure_url;
-    }
-
     const hashedPassword = await bcrypt.hash(password, 10);
 
     await db.query(
-      'INSERT INTO user (name, birthday, picture, email, password, disease, freq) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [name, birthday, imageUrl, email, hashedPassword, disease, freq]
+      'INSERT INTO user (name, birthday, email, password, disease, freq) VALUES (?, ?, ?, ?, ?, ?)',
+      [name, birthday, email, hashedPassword, disease, freq]
     );
 
     res.status(201).json({ message: '註冊成功' });
@@ -108,6 +129,7 @@ router.post('/register', upload.single('picture'), async (req, res) => {
     res.status(500).json({ message: '伺服器錯誤' });
   }
 });
+
 
 
 // === 登入帳號 ===
