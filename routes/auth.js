@@ -23,7 +23,8 @@ router.post('/sendCode', async (req, res) => {
     await redisClient.setEx(resetCodeKey, 300, code);
     await redisClient.setEx(rateLimitKey, 60, '1');
     const mailOptions = {
-      from: process.env.GMAIL_USER,
+      // from: process.env.GMAIL_USER,
+      from: process.env.SENDGRID_SENDER,
       to: email,
       subject: '驗證碼',
       text: `您好，您的驗證碼是：${code}。\n請於 5 分鐘內輸入以完成驗證。`
