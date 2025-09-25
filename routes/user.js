@@ -9,7 +9,7 @@ const { upload, uploadToCloudinary } = require('../utils/upload');
 
 // === 叫醒伺服器用 ===
 router.get('/ping', async (req, res) => {
-  res.status(200).send('pong');
+    res.status(200).send('pong');
 });
 
 // === 取得使用者資料 ===
@@ -158,11 +158,13 @@ router.get('/getUserDetail', async (req, res) => {
         const email = decoded.email;
         // 查使用者
         const [userRows] = await db.query(
-            `SELECT id, name, gender, birthday, picture, email ,disease, freq FROM user WHERE email = ?`,
+            `SELECT id, name, birthday, email, disease, freq FROM user WHERE email = ?`,
             [email]
         );
         if (userRows.length === 0) return res.status(404).json({ message: '找不到使用者' });
         const user = userRows[0];
+        // 移除 gender 與 picture 欄位
+        // 若前端有用到 user.gender 或 user.picture，請一併調整
         // 查診斷報告與護理提醒
         const [rows] = await db.query(`
             SELECT
@@ -207,7 +209,7 @@ router.get('/getUserDetail', async (req, res) => {
                     recording: row.recording,
                     photo: row.photo,
                     name: row.name,
-                    group_id:row.group_id,
+                    group_id: row.group_id,
                     reminds: [],
                 };
                 reports.push(reportMap[row.reportId]);
