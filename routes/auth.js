@@ -9,33 +9,56 @@ const { upload, uploadToCloudinary } = require('../utils/upload');
 const jwt = require('jsonwebtoken'); //user身分驗證
 
 
-// === 發送驗證碼 ===
+// // === 發送驗證碼 ===
+// router.post('/sendCode', async (req, res) => {
+//   const { email } = req.body;
+//   if (!email) return res.status(400).json({ message: '請輸入 Email' });
+//   const rateLimitKey = `rate_limit:${email}`;
+//   const resetCodeKey = `reset_code:${email}`;
+//   if (await redisClient.get(rateLimitKey)) {
+//     return res.status(429).json({ message: '請稍後再試' });
+//   }
+//   const code = Math.floor(100000 + Math.random() * 900000).toString();
+//   try {
+//     await redisClient.setEx(resetCodeKey, 300, code);
+//     await redisClient.setEx(rateLimitKey, 60, '1');
+//     const mailOptions = {
+//       // from: process.env.GMAIL_USER,
+//       from: process.env.SENDGRID_SENDER,
+//       to: email,
+//       subject: '驗證碼',
+//       text: `您好，您的驗證碼是：${code}。\n請於 5 分鐘內輸入以完成驗證。`
+//     };
+//     await transporter.sendMail(mailOptions);
+//     return res.json({ message: '驗證碼已寄出' });
+//   } catch (err) {
+//     console.error(err);
+//     return res.status(500).json({ message: '伺服器錯誤' });
+//   }
+// });
+const sgMail = require('@sendgrid/mail');
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
 router.post('/sendCode', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ message: '請輸入 Email' });
-  const rateLimitKey = `rate_limit:${email}`;
-  const resetCodeKey = `reset_code:${email}`;
-  if (await redisClient.get(rateLimitKey)) {
-    return res.status(429).json({ message: '請稍後再試' });
-  }
+
   const code = Math.floor(100000 + Math.random() * 900000).toString();
+
   try {
-    await redisClient.setEx(resetCodeKey, 300, code);
-    await redisClient.setEx(rateLimitKey, 60, '1');
-    const mailOptions = {
-      // from: process.env.GMAIL_USER,
-      from: process.env.SENDGRID_SENDER,
+    await sgMail.send({
       to: email,
+      from: process.env.SENDGRID_SENDER, // 需驗證過的寄件人
       subject: '驗證碼',
-      text: `您好，您的驗證碼是：${code}。\n請於 5 分鐘內輸入以完成驗證。`
-    };
-    await transporter.sendMail(mailOptions);
-    return res.json({ message: '驗證碼已寄出' });
+      text: `您好，您的驗證碼是：${code}。\n請於 5 分鐘內輸入以完成驗證。`,
+    });
+    return res.json({ message: '驗證碼已寄出', code });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: '伺服器錯誤' });
   }
 });
+
 
 // === 驗證重設密碼驗證碼 ===
 router.post('/verifyCode', async (req, res) => {
