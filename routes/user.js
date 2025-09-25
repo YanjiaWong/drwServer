@@ -12,6 +12,20 @@ router.get('/ping', async (req, res) => {
     res.status(200).send('pong');
 });
 
+
+// === 取得所有使用者資料 ===
+router.get('/getUsers', async (req, res) => {
+    try {
+        const [rows] = await db.query(
+            `SELECT * FROM user`
+        );
+        res.json({ users: rows });
+    } catch (err) {
+        console.error('取得所有使用者資料錯誤:', err);
+        res.status(500).json({ message: '伺服器錯誤' });
+    }
+});
+
 // === 取得使用者資料 ===
 router.get('/getUserInfo', async (req, res) => {
     const authHeader = req.headers.authorization;
