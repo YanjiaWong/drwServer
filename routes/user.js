@@ -212,30 +212,18 @@ router.get('/getUserDetail', async (req, res) => {
         for (const row of rows) {
             if (!reportMap[row.reportId]) {
                 reportMap[row.reportId] = {
-                    id: row.reportId,
-                    userId: row.fk_userid,
-                    date: row.date,
-                    type: row.type,
-                    oktime: row.oktime,
-                    caremode: row.caremode,
-                    ifcall: row.ifcall,
-                    choosekind: row.choosekind,
-                    recording: row.recording,
-                    photo: row.photo,
-                    name: row.name,
-                    group_id: row.group_id,
+                    id: row.reportId, userId: row.fk_userid, date: row.date,
+                    type: row.type, oktime: row.oktime, caremode: row.caremode,
+                    ifcall: row.ifcall, choosekind: row.choosekind, recording: row.recording,
+                    photo: row.photo, name: row.name, group_id: row.group_id,
                     reminds: [],
                 };
                 reports.push(reportMap[row.reportId]);
             }
             if (row.remindId) {
                 reportMap[row.reportId].reminds.push({
-                    id: row.remindId,
-                    userId: row.fk_user_id,
-                    recordId: row.fk_record_id,
-                    date: row.day,
-                    time: row.time,
-                    freq: row.freq,
+                    id: row.remindId, userId: row.fk_user_id, recordId: row.fk_record_id,
+                    date: row.day, time: row.time, freq: row.freq,
                 });
             }
         }

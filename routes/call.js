@@ -121,27 +121,7 @@ router.post('/deleteRemind', async (req, res) => {
     }
 });
 
-//更新groupId
-router.post('/updateGroupId', async (req, res) => {
-    const { userId, recordId1, recordId2, groupId } = req.body;
-    if (!userId || !recordId1 || !recordId2 || groupId === undefined) {
-        return res.status(400).json({ success: false, message: '缺少必要欄位' });
-    }
-    try {
-        const [result] = await db.query(
-            'UPDATE record SET group_id = ? WHERE fk_userid = ? AND id_record IN (?, ?)',
-            [groupId, userId, recordId1, recordId2]
-        );
-        if (result.affectedRows > 0) {
-            res.status(200).json({ success: true, message: '更新成功' });
-        } else {
-            res.status(404).json({ success: false, message: '找不到符合條件的資料' });
-        }
-    } catch (error) {
-        console.error('更新 group_id 失敗：', error);
-        res.status(500).json({ success: false, message: '伺服器錯誤' });
-    }
-});
+
 
 
 
