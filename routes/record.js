@@ -54,16 +54,24 @@ router.post('/generateImages', async (req, res) => {
   }
 });
 
-
+// === 新增診斷報告 ===
 router.post('/addRecord', upload.single('photo'), async (req, res) => {
   try {
+    // 從 request body 中解構需要的欄位
     const { fk_userid, date, type, oktime, caremode, ifcall, choosekind, recording, name } = req.body;
+
+    // 檢查是否有收到圖片檔案，若沒有則回傳錯誤
     if (!req.file) {
       return res.status(400).json({ error: '請提供圖片' });
     }
-    // 上傳至 Cloudinary
+
+    // 將圖片 buffer 上傳至 Cloudinary，檔名以時間戳記命名
     const cloudResult = await uploadToCloudinary(req.file.buffer, Date.now().toString());
+
+    // 取得 Cloudinary 回傳的圖片網址
     const photoUrl = cloudResult.secure_url;
+
+    // 將新紀錄插入資料庫的 record 資料表
     const [result] = await db.query(
       `
       INSERT INTO record 
@@ -72,13 +80,20 @@ router.post('/addRecord', upload.single('photo'), async (req, res) => {
       `,
       [fk_userid, date, photoUrl, type, oktime, caremode, ifcall, choosekind, recording, name]
     );
+
+    // 取得剛插入資料的 ID
     const insertedId = result.insertId;
+
+    // 新增成功時印出成功訊息
+    console.log(`新增診斷報告成功，ID: ${insertedId}, UserID: ${fk_userid}`);
+    // 回傳成功訊息，包含新診斷報告的 ID 及圖片網址
     return res.json({
       message: 'Record added successfully',
       id_record: insertedId,
       photoPath: photoUrl, // Cloudinary 圖片網址
     });
   } catch (err) {
+    // 錯誤處理：印出錯誤訊息並回傳錯誤
     console.error('新增錯誤:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -299,24 +314,24 @@ router.post('/updateIfcall', async (req, res) => {
 
 //更新groupId
 router.post('/updateGroupId', async (req, res) => {
-    const { userId, recordId1, recordId2, groupId } = req.body;
-    if (!userId || !recordId1 || !recordId2 || groupId === undefined) {
-        return res.status(400).json({ success: false, message: '缺少必要欄位' });
+  const { userId, recordId1, recordId2, groupId } = req.body;
+  if (!userId || !recordId1 || !recordId2 || groupId === undefined) {
+    return res.status(400).json({ success: false, message: '缺少必要欄位' });
+  }
+  try {
+    const [result] = await db.query(
+      'UPDATE record SET group_id = ? WHERE fk_userid = ? AND id_record IN (?, ?)',
+      [groupId, userId, recordId1, recordId2]
+    );
+    if (result.affectedRows > 0) {
+      res.status(200).json({ success: true, message: '更新成功' });
+    } else {
+      res.status(404).json({ success: false, message: '找不到符合條件的資料' });
     }
-    try {
-        const [result] = await db.query(
-            'UPDATE record SET group_id = ? WHERE fk_userid = ? AND id_record IN (?, ?)',
-            [groupId, userId, recordId1, recordId2]
-        );
-        if (result.affectedRows > 0) {
-            res.status(200).json({ success: true, message: '更新成功' });
-        } else {
-            res.status(404).json({ success: false, message: '找不到符合條件的資料' });
-        }
-    } catch (error) {
-        console.error('更新 group_id 失敗：', error);
-        res.status(500).json({ success: false, message: '伺服器錯誤' });
-    }
+  } catch (error) {
+    console.error('更新 group_id 失敗：', error);
+    res.status(500).json({ success: false, message: '伺服器錯誤' });
+  }
 });
 
 module.exports = router;
