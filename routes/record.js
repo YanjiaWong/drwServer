@@ -58,7 +58,7 @@ router.post('/generateImages', async (req, res) => {
 router.post('/addRecord', upload.single('photo'), async (req, res) => {
   try {
     // 首先會先將請求端傳入的參數存入變數中
-    const { fk_userid, date, type, oktime, caremode, ifcall, choosekind, recording, name } = req.body;
+    const { fk_userid, date, type, oktime, caremode, ifcall, choosekind, recording, name, memberId } = req.body;
 
     // 檢查是否有收到圖片檔案，若沒有則回傳錯誤
     if (!req.file) {
@@ -70,15 +70,15 @@ router.post('/addRecord', upload.single('photo'), async (req, res) => {
 
     // 取得 Cloudinary 回傳的圖片網址
     const photoUrl = cloudResult.secure_url;
-    
+
     // 將新紀錄插入資料庫的 record 資料表
     const [result] = await db.query(
       `
       INSERT INTO record 
-      (fk_userid, date, photo, type, oktime, caremode, ifcall, choosekind, recording, name)
+      (fk_userid, date, photo, type, oktime, caremode, ifcall, choosekind, recording, name, member_id)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
-      [fk_userid, date, photoUrl, type, oktime, caremode, ifcall, choosekind, recording, name]
+      [fk_userid, date, photoUrl, type, oktime, caremode, ifcall, choosekind, recording, name, memberId]
     );
 
     // result取得剛插入診斷報告 ID
@@ -204,7 +204,7 @@ router.get('/getRecordRemind', async (req, res) => {
   }
 });
 
-//取得groupId
+//取得group
 router.get('/getGroup', async (req, res) => {
   const userId = req.query.userId;
   try {
@@ -247,6 +247,34 @@ router.get('/getGroupId', async (req, res) => {
     }
   } catch (error) {
     console.error('查詢 group_id 失敗：', error);
+    res.status(500).json({ success: false, message: '伺服器錯誤' });
+  }
+});
+
+//取得memberId
+router.get('/getMemberId', async (req, res) => {
+  const userId = req.query.userId;
+
+  if (!userId) {
+    return res.status(400).json({ success: false, message: '缺少 userId ' });
+  }
+
+  try {
+    const [rows] = await db.query(
+      'SELECT DISTINCT r.member_id FROM record r WHERE r.fk_userid = ?',
+      [userId]
+    );
+
+    if (rows.length > 0) {
+      res.status(200).json({
+        success: true,
+        memberId: rows[0].member_id,
+      });
+    } else {
+      res.status(404).json({ success: false, message: '找不到符合條件的紀錄' });
+    }
+  } catch (error) {
+    console.error('查詢 member_id 失敗：', error);
     res.status(500).json({ success: false, message: '伺服器錯誤' });
   }
 });
