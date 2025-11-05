@@ -57,7 +57,7 @@ router.post('/generateImages', async (req, res) => {
 // === 新增診斷報告 ===
 router.post('/addRecord', upload.single('photo'), async (req, res) => {
   try {
-    // 從 request body 中解構需要的欄位
+    // 首先會先將請求端傳入的參數存入變數中
     const { fk_userid, date, type, oktime, caremode, ifcall, choosekind, recording, name } = req.body;
 
     // 檢查是否有收到圖片檔案，若沒有則回傳錯誤
@@ -65,12 +65,12 @@ router.post('/addRecord', upload.single('photo'), async (req, res) => {
       return res.status(400).json({ error: '請提供圖片' });
     }
 
-    // 將圖片 buffer 上傳至 Cloudinary，檔名以時間戳記命名
+    // 將圖片上傳至 Cloudinary，檔名以時間戳記命名
     const cloudResult = await uploadToCloudinary(req.file.buffer, Date.now().toString());
 
     // 取得 Cloudinary 回傳的圖片網址
     const photoUrl = cloudResult.secure_url;
-
+    
     // 將新紀錄插入資料庫的 record 資料表
     const [result] = await db.query(
       `
@@ -81,7 +81,7 @@ router.post('/addRecord', upload.single('photo'), async (req, res) => {
       [fk_userid, date, photoUrl, type, oktime, caremode, ifcall, choosekind, recording, name]
     );
 
-    // 取得剛插入資料的 ID
+    // result取得剛插入診斷報告 ID
     const insertedId = result.insertId;
 
     // 新增成功時印出成功訊息
