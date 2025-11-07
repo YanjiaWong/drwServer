@@ -172,7 +172,7 @@ router.get('/getUserDetail', async (req, res) => {
         const email = decoded.email;
         // 查使用者
         const [userRows] = await db.query(
-            `SELECT id, name, birthday, email, disease, freq, role FROM user WHERE email = ?`,
+            `SELECT id, name, birthday, email, disease, freq, role, password FROM user WHERE email = ?`,
             [email]
         );
         if (userRows.length === 0) return res.status(404).json({ message: '找不到使用者' });
