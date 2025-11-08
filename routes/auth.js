@@ -104,12 +104,12 @@ router.post('/verifyCode', async (req, res) => {
 //   }
 // });
 router.post('/register', async (req, res) => {
-  const { name, birthday, email, password, disease = '[無]', freq = '無、無、無' } = req.body || {};
+  // 支援可選的 role 欄位
+  const { name, birthday, email, password, disease, freq, role } = req.body || {};
 
   if (!name || !birthday || !email || !password) {
     return res.status(400).json({ message: '尚有欄位未填寫' });
   }
-
 
   try {
     const [existing] = await db.query('SELECT id FROM user WHERE email = ?', [email]);
@@ -119,9 +119,10 @@ router.post('/register', async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // 若資料表有 role 欄位，將會儲存傳入的 role，否則會儲存 NULL
     await db.query(
-      'INSERT INTO user (name, birthday, email, password, disease, freq) VALUES (?, ?, ?, ?, ?, ?)',
-      [name, birthday, email, hashedPassword, disease, freq]
+      'INSERT INTO user (name, birthday, email, password, disease, freq, role) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [name, birthday, email, hashedPassword, disease, freq, role || null]
     );
 
     res.status(201).json({ message: '註冊成功' });
