@@ -21,6 +21,9 @@ app.use('/', callRoutes);
 const hospitalRoutes = require('./routes/hospital');
 app.use('/', hospitalRoutes);
 
+const familyRoutes = require('./routes/family');
+app.use('/', familyRoutes);
+
 app.get('/', (req, res) => {
   res.send(' Server is running!');
 });
