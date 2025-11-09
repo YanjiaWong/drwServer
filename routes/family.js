@@ -11,12 +11,22 @@ router.post('/addMember', async (req, res) => {
   }
 
   try {
-  
+    // 檢查該 user 下是否已有相同 role
+    const [existingRows] = await db.query(
+      'SELECT id FROM family WHERE user_id = ? AND role = ?',
+      [userId, role]
+    );
+
+    if (existingRows.length > 0) {
+      return res.status(409).json({ message: '該角色已存在' });
+    }
+
     await db.query(
       'INSERT INTO family (user_id, role, birthyear, disease, freq) VALUES (?, ?, ?, ?, ?)',
       [userId, role, birthyear, disease, freq]
     );
 
+    console.log(`Family member added for user ${userId} with role ${role}`);
     res.status(201).json({ message: '成員新增成功' });
   } catch (error) {
     console.error('新增錯誤：', error);
