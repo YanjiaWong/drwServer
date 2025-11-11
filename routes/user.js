@@ -285,12 +285,12 @@ router.get('/getUserDetail', async (req, res) => {
 // === 取得使用者所有資訊(含家庭) ===
 router.get('/fetchUserInfo', async (req, res) => {
   try {
-    const email = req.query.email || req.body.email;
-    if (!email) return res.status(400).json({ message: '缺少 email 參數' });
+    const id = req.query.id || req.body.id;
+    if (!id) return res.status(400).json({ message: '缺少 id 參數' });
 
     const [userRows] = await db.query(
-      `SELECT * FROM user WHERE email = ?`,
-      [email]
+      `SELECT * FROM user WHERE id = ?`,
+      [id]
     );
     if (userRows.length === 0) return res.status(404).json({ message: '找不到使用者' });
     const user = userRows[0];
