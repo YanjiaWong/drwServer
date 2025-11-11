@@ -2,18 +2,39 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 
+router.get('/getMembers', async (req, res) => {
+  const id = req.query.id;
+  if (!id) return res.status(400).json({ error: 'id is required' });
+
+  const userId = Number(id);
+  if (isNaN(userId)) return res.status(400).json({ error: 'Invalid id format' });
+
+  const query = 'SELECT * FROM family WHERE user_id = ?';
+  try {
+    const [results] = await db.query(query, [userId]);
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'No family member found' });
+    }
+    res.json({ members: results });
+  } catch (err) {
+    console.error('Database error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+
 router.post('/addMember', async (req, res) => {
-  
+
   const { userId, role, birthyear, disease, freq } = req.body || {};
 
-  if ( !userId || !role || !birthyear || !disease || !freq ) {
+  if (!userId || !role || !birthyear || !disease || !freq) {
     return res.status(400).json({ message: '尚有欄位未填寫' });
   }
 
   try {
     // 檢查該 user 下是否已有相同 role
     const [existingRows] = await db.query(
-      'SELECT id FROM family WHERE user_id = ? AND role = ?',
+      'SELECT member_id FROM family WHERE user_id = ? AND role = ?',
       [userId, role]
     );
 

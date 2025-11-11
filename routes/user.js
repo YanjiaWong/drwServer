@@ -159,6 +159,51 @@ router.post('/updateImage', upload.single('picture'), async (req, res) => {
     }
 });
 
+//取得使用者家庭資訊
+router.get('/getUserFamily', async (req, res) => {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+
+    if (!token) {
+        return res.status(401).json({ message: '未提供 token' });
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const email = decoded.email;
+
+        // 查使用者
+        const [userRows] = await db.query(
+            `SELECT id, email FROM user WHERE email = ?`,
+            [email]
+        );
+
+        if (userRows.length === 0) {
+            return res.status(404).json({ message: '找不到使用者' });
+        }
+
+        const user = userRows[0];
+
+        // 查家庭成員
+        const [rows] = await db.query(`
+            SELECT *
+            FROM family f
+            WHERE f.user_id = ?;
+        `, [user.id]);
+
+        res.status(200).json({ user, family: rows });
+
+    } catch (err) {
+        console.error('資料取得錯誤:', err);
+        if (err.name === 'TokenExpiredError') {
+            return res.status(401).json({ message: 'Token 已過期' });
+        }
+        if (err.name === 'JsonWebTokenError') {
+            return res.status(401).json({ message: '無效的 Token' });
+        }
+        res.status(500).json({ message: '伺服器錯誤' });
+    }
+});
 
 //取得使用者所有資訊
 router.get('/getUserDetail', async (req, res) => {
@@ -237,6 +282,31 @@ router.get('/getUserDetail', async (req, res) => {
     }
 });
 
+// === 取得使用者所有資訊(含家庭) ===
+router.get('/fetchUserInfo', async (req, res) => {
+  try {
+    const email = req.query.email || req.body.email;
+    if (!email) return res.status(400).json({ message: '缺少 email 參數' });
+
+    const [userRows] = await db.query(
+      `SELECT * FROM user WHERE email = ?`,
+      [email]
+    );
+    if (userRows.length === 0) return res.status(404).json({ message: '找不到使用者' });
+    const user = userRows[0];
+
+    const [family] = await db.query(`SELECT * FROM family WHERE user_id = ?`, [user.id]);
+    const [reports] = await db.query(`SELECT * FROM record WHERE fk_userid = ? ORDER BY id_record DESC`, [user.id]);
+    const [reminds] = await db.query(`SELECT * FROM calls WHERE fk_user_id = ? ORDER BY id_calls DESC`, [user.id]);
+
+    res.json({ user, family, reports, reminds });
+  } catch (err) {
+    console.error('資料取得錯誤:', err.message);
+    res.status(500).json({ message: '伺服器錯誤', error: err.message });
+  }
+});
+
+
 // === 修改習慣頻率 ===
 router.post('/updateFreq', async (req, res) => {
     const { id, freq } = req.body;
@@ -266,5 +336,7 @@ router.post('/updateDisease', async (req, res) => {
         return res.status(500).json({ error: '資料庫錯誤' });
     }
 });
+
+
 
 module.exports = router;
