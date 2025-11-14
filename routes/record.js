@@ -58,7 +58,7 @@ router.post('/generateImages', async (req, res) => {
 router.post('/addRecord', upload.single('photo'), async (req, res) => {
   try {
     // 首先會先將請求端傳入的參數存入變數中
-    const { fk_userid, date, type, oktime, caremode, ifcall, choosekind, recording, name, memberId } = req.body;
+    const { fk_userid, date, type, oktime, caremode, ifcall, choosekind, recording, name, member_id } = req.body;
 
     // 檢查是否有收到圖片檔案，若沒有則回傳錯誤
     if (!req.file) {
@@ -76,9 +76,9 @@ router.post('/addRecord', upload.single('photo'), async (req, res) => {
       `
       INSERT INTO record 
       (fk_userid, date, photo, type, oktime, caremode, ifcall, choosekind, recording, name, member_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
-      [fk_userid, date, photoUrl, type, oktime, caremode, ifcall, choosekind, recording, name, memberId]
+      [fk_userid, date, photoUrl, type, oktime, caremode, ifcall, choosekind, recording, name, member_id]
     );
 
     // result取得剛插入診斷報告 ID
@@ -111,7 +111,7 @@ router.get('/getRecords', async (req, res) => {
       id_record, fk_userid,
       DATE_FORMAT(date, '%Y-%m-%d') AS date,
       photo, type, oktime, caremode,
-      ifcall, choosekind, recording, group_id, name
+      ifcall, choosekind, recording, group_id, name, member_id
     FROM record
     WHERE fk_userid = ?
   `;
@@ -139,7 +139,7 @@ router.get('/getRecordRemind', async (req, res) => {
     const [rows] = await db.query(`
             SELECT
                 r.fk_userid,
-                r.id_record AS reportId,
+                r.id_record,
                 DATE_FORMAT(r.date, '%Y-%m-%d') AS date,
                 r.type,
                 r.oktime,
@@ -150,12 +150,14 @@ router.get('/getRecordRemind', async (req, res) => {
                 r.photo,
                 r.name,
                 r.group_id,
+                r.member_id,
                 c.fk_user_id,
-                c.id_calls AS remindId,
+                c.id_calls,
                 c.fk_record_id,
                 c.time,
                 c.day,
-                c.freq
+                c.freq,
+                c.member_id
             FROM record r
             LEFT JOIN calls c ON r.id_record = c.fk_record_id
             WHERE r.fk_userid = ?
@@ -168,8 +170,9 @@ router.get('/getRecordRemind', async (req, res) => {
     for (const row of rows) {
       if (!reportMap[row.reportId]) {
         reportMap[row.reportId] = {
-          id: row.reportId,
-          userId: row.fk_userid,
+          id_record: row.id_record,
+          fk_userid: row.fk_userid,
+          member_id:row.member_id,
           date: row.date,
           type: row.type,
           oktime: row.oktime,
@@ -187,12 +190,13 @@ router.get('/getRecordRemind', async (req, res) => {
 
       if (row.remindId) {
         reportMap[row.reportId].reminds.push({
-          id: row.remindId,
-          userId: row.fk_user_id,
-          recordId: row.fk_record_id,
+          id_calls: row.id_calls,
+          fk_user_id: row.fk_user_id,
+          fk_record_id: row.fk_record_id,
           date: row.day,
           time: row.time,
           freq: row.freq,
+          member_id:row.member_id
         });
       }
     }
