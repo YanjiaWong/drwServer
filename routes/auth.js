@@ -75,10 +75,11 @@ router.post('/verifyCode', async (req, res) => {
   }
 });
 
-// // === 註冊帳號 ===
+// === 註冊帳號 ===
 // router.post('/register', async (req, res) => {
+//   // 支援可選的 role 欄位
+//   const { name, birthday, email, password, disease, freq, role } = req.body || {};
 
-//   const { name, birthday, email, password, disease, freq } = req.body;
 //   if (!name || !birthday || !email || !password) {
 //     return res.status(400).json({ message: '尚有欄位未填寫' });
 //   }
@@ -89,12 +90,12 @@ router.post('/verifyCode', async (req, res) => {
 //       return res.status(409).json({ message: '此電子郵件已被註冊' });
 //     }
 
-
 //     const hashedPassword = await bcrypt.hash(password, 10);
 
+//     // 若資料表有 role 欄位，將會儲存傳入的 role，否則會儲存 NULL
 //     await db.query(
-//       'INSERT INTO user (name, birthday,  email, password, disease, freq) VALUES (?, ?, ?, ?, ?, ?)',
-//       [name, birthday,  email, hashedPassword, disease, freq]
+//       'INSERT INTO user (name, birthday, email, password, disease, freq, role) VALUES (?, ?, ?, ?, ?, ?, ?)',
+//       [name, birthday, email, hashedPassword, disease, freq, role || null]
 //     );
 
 //     res.status(201).json({ message: '註冊成功' });
@@ -105,9 +106,9 @@ router.post('/verifyCode', async (req, res) => {
 // });
 router.post('/register', async (req, res) => {
   // 支援可選的 role 欄位
-  const { name, birthday, email, password, disease, freq, role } = req.body || {};
+  const { name, birthyear, email, password, disease, freq, role } = req.body || {};
 
-  if (!name || !birthday || !email || !password) {
+  if (!name || !birthyear || !email || !password || !disease || !freq || !role) {
     return res.status(400).json({ message: '尚有欄位未填寫' });
   }
 
@@ -119,10 +120,16 @@ router.post('/register', async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 若資料表有 role 欄位，將會儲存傳入的 role，否則會儲存 NULL
+    const [result] = await db.query(
+      'INSERT INTO user (name, email, password) VALUES (?, ?, ?)',
+      [name, email, hashedPassword]
+    );
+
+    const insertedId = result.insertId;
+
     await db.query(
-      'INSERT INTO user (name, birthday, email, password, disease, freq, role) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [name, birthday, email, hashedPassword, disease, freq, role || null]
+      'INSERT INTO family (user_id, role, birthyear, disease, freq) VALUES (?, ?, ?, ?, ?)',
+      [insertedId, role, birthyear, disease, freq]
     );
 
     res.status(201).json({ message: '註冊成功' });
