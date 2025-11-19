@@ -168,11 +168,11 @@ router.get('/getRecordRemind', async (req, res) => {
     const reportMap = {};
     const reports = [];
     for (const row of rows) {
-      if (!reportMap[row.reportId]) {
-        reportMap[row.reportId] = {
+      if (!reportMap[row.id_record]) {
+        reportMap[row.id_record] = {
           id_record: row.id_record,
           fk_userid: row.fk_userid,
-          member_id:row.member_id,
+          member_id: row.record_member_id, // <-- 正確
           date: row.date,
           type: row.type,
           oktime: row.oktime,
@@ -185,20 +185,20 @@ router.get('/getRecordRemind', async (req, res) => {
           group_id: row.group_id,
           reminds: [],
         };
-        reports.push(reportMap[row.reportId]);
       }
 
-      if (row.remindId) {
-        reportMap[row.reportId].reminds.push({
+      if (row.id_calls) {
+        reportMap[row.id_record].reminds.push({
           id_calls: row.id_calls,
           fk_user_id: row.fk_user_id,
           fk_record_id: row.fk_record_id,
           date: row.day,
           time: row.time,
           freq: row.freq,
-          member_id:row.member_id
+          member_id: row.call_member_id, // <-- 這裡用 calls 的 member_id
         });
       }
+
     }
 
     res.json({ reports });
