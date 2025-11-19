@@ -137,42 +137,43 @@ router.get('/getRecordRemind', async (req, res) => {
 
   try {
     const [rows] = await db.query(`
-            SELECT
-                r.fk_userid,
-                r.id_record,
-                DATE_FORMAT(r.date, '%Y-%m-%d') AS date,
-                r.type,
-                r.oktime,
-                r.caremode,
-                r.ifcall,
-                r.choosekind,
-                r.recording,
-                r.photo,
-                r.name,
-                r.group_id,
-                r.member_id AS record_member_id,
-                c.fk_user_id,
-                c.id_calls,
-                c.fk_record_id,
-                c.time,
-                c.day,
-                c.freq,
-                c.member_id AS call_member_id
-            FROM record r
-            LEFT JOIN calls c ON r.id_record = c.fk_record_id
-            WHERE r.fk_userid = ?
-            ORDER BY r.id_record ASC, c.id_calls ASC;
-        `, [userId]);
+      SELECT
+        r.fk_userid,
+        r.id_record,
+        DATE_FORMAT(r.date, '%Y-%m-%d') AS date,
+        r.type,
+        r.oktime,
+        r.caremode,
+        r.ifcall,
+        r.choosekind,
+        r.recording,
+        r.photo,
+        r.name,
+        r.group_id,
+        r.member_id AS record_member_id,
+        c.fk_user_id,
+        c.id_calls,
+        c.fk_record_id,
+        c.time,
+        c.day,
+        c.freq,
+        c.member_id AS call_member_id
+      FROM record r
+      LEFT JOIN calls c ON r.id_record = c.fk_record_id
+      WHERE r.fk_userid = ?
+      ORDER BY r.id_record ASC, c.id_calls ASC;
+    `, [userId]);
 
-    // 整理成巢狀格式
     const reportMap = {};
     const reports = [];
+
     for (const row of rows) {
+
       if (!reportMap[row.id_record]) {
         reportMap[row.id_record] = {
           id_record: row.id_record,
           fk_userid: row.fk_userid,
-          member_id: row.record_member_id, // <-- 正確
+          member_id: row.record_member_id,
           date: row.date,
           type: row.type,
           oktime: row.oktime,
@@ -185,9 +186,11 @@ router.get('/getRecordRemind', async (req, res) => {
           group_id: row.group_id,
           reminds: [],
         };
+
+        reports.push(reportMap[row.id_record]);
       }
 
-      if (row.id_calls) {
+      if (row.id_calls != null) {
         reportMap[row.id_record].reminds.push({
           id_calls: row.id_calls,
           fk_user_id: row.fk_user_id,
@@ -195,18 +198,19 @@ router.get('/getRecordRemind', async (req, res) => {
           date: row.day,
           time: row.time,
           freq: row.freq,
-          member_id: row.call_member_id, // <-- 這裡用 calls 的 member_id
+          member_id: row.call_member_id,
         });
       }
-
     }
 
-    res.json({ reports });
+    res.json({ reports }); // <-- 正確位置
+
   } catch (err) {
     console.error('資料取得錯誤:', err);
     res.status(500).json({ message: '伺服器錯誤' });
   }
 });
+
 
 //取得group
 router.get('/getGroup', async (req, res) => {
