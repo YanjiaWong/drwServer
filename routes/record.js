@@ -150,14 +150,14 @@ router.get('/getRecordRemind', async (req, res) => {
                 r.photo,
                 r.name,
                 r.group_id,
-                r.member_id,
+                r.member_id AS record_member_id,
                 c.fk_user_id,
                 c.id_calls,
                 c.fk_record_id,
                 c.time,
                 c.day,
                 c.freq,
-                c.member_id
+                c.member_id AS call_member_id
             FROM record r
             LEFT JOIN calls c ON r.id_record = c.fk_record_id
             WHERE r.fk_userid = ?
