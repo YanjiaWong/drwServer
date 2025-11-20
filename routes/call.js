@@ -5,14 +5,14 @@ const db = require('../config/db');
 // === 新增護理提醒 ===
 router.post('/addRemind', async (req, res) => {
     try {
-        const { fk_user_id, fk_record_id, day, time, freq } = req.body;
+        const { fk_user_id, fk_record_id, day, time, freq, member_id } = req.body;
         console.log('收到的參數:', req.body);
         const query = `
       INSERT INTO calls 
-      (fk_user_id, fk_record_id, day, time, freq)
-      VALUES (?, ?, ?, ?, ?)
+      (fk_user_id, fk_record_id, day, time, freq, member_id)
+      VALUES (?, ?, ?, ?, ?, ?)
     `;
-        const [result] = await db.query(query, [fk_user_id, fk_record_id, day, time, freq]);
+        const [result] = await db.query(query, [fk_user_id, fk_record_id, day, time, freq, member_id]);
         res.json({
             message: 'User added successfully',
             insertId: result.insertId
