@@ -195,7 +195,7 @@ router.get('/getRecordRemind', async (req, res) => {
           id_calls: row.id_calls,
           fk_user_id: row.fk_user_id,
           fk_record_id: row.fk_record_id,
-          date: row.day,
+          day: row.day,
           time: row.time,
           freq: row.freq,
           member_id: row.call_member_id,
