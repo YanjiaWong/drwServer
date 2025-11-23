@@ -313,7 +313,7 @@ router.post('/updateFreq', async (req, res) => {
     console.log('接收到請求', req.body);
 
     try {
-        const [result] = await db.query('UPDATE user SET freq = ? WHERE id = ?', [freq, id]);
+        const [result] = await db.query('UPDATE family SET freq = ? WHERE member_id = ?', [freq, id]);
         console.log('更新成功', result);
         return res.json({ message: '更新成功' });
     } catch (err) {
@@ -328,7 +328,7 @@ router.post('/updateDisease', async (req, res) => {
     console.log('接收到請求', req.body);
 
     try {
-        const [result] = await db.query('UPDATE user SET disease = ? WHERE id = ?', [disease, id]);
+        const [result] = await db.query('UPDATE family SET disease = ? WHERE member_id = ?', [disease, id]);
         console.log('更新成功', result);
         return res.json({ message: '更新成功' });
     } catch (err) {
